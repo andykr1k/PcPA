@@ -24,7 +24,7 @@ class RobotFaceWidget(QWidget):
         # Animation timer
         self.animation_timer = QTimer(self)
         self.animation_timer.timeout.connect(self._update_animation)
-        self.animation_timer.start(1000 // 15)  # 15 FPS
+        self.animation_timer.start(1000 // 30)  # 30 FPS
 
         self.setMinimumSize(200, 100)
 

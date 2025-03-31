@@ -9,7 +9,7 @@ MINIMIZED_WIDTH = 200
 MINIMIZED_HEIGHT = 150
 MINIMIZED_FACE_WIDTH = 180  # Slightly smaller than window
 MINIMIZED_FACE_HEIGHT = 130 # Slightly smaller than window
-BORDER_WIDTH = 10
+BORDER_WIDTH = 5
 MAXIMIZED_FACE_SCALE_W = 0.8 # Face width as % of screen width when maximized
 MAXIMIZED_FACE_SCALE_H = 0.8 # Face height as % of screen height when maximized
 

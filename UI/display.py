@@ -124,12 +124,12 @@ class MainWindow(QWidget):
     def minimize(self):
         """Minimize the window to the top-left corner."""
         # Use dimensions from config
-        self.setGeometry(
-            config.MINIMIZED_X,
-            config.MINIMIZED_Y,
-            config.MINIMIZED_WIDTH,
-            config.MINIMIZED_HEIGHT
-        )
+        # self.setGeometry(
+        #     config.MINIMIZED_X,
+        #     config.MINIMIZED_Y,
+        #     config.MINIMIZED_WIDTH,
+        #     config.MINIMIZED_HEIGHT
+        # )
         # Resize face using config dimensions
         self.face_widget.setFixedSize(
             config.MINIMIZED_FACE_WIDTH,
@@ -137,9 +137,10 @@ class MainWindow(QWidget):
         )
         # Ensure the face is centered or positioned correctly if layout doesn't do it
         # self.face_widget.move(config.BORDER_WIDTH // 2, config.BORDER_WIDTH // 2) # Example if needed
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint) # Optional: Allow minimized window to go behind others
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint) # Optional: Allow minimized window to go behind others
         self.show() # Ensure it's visible if it was hidden
         self.update() # Repaint to remove border if paintEvent checks isMinimized()
+        self.raise_() # Bring window to front
 
     def maximize(self):
         """Maximize the window to fullscreen."""
