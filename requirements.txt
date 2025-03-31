@@ -2,3 +2,5 @@ opencv-python
 mediapipe
 pyautogui
 PyQt5
+SpeechRecognition
+pyttsx3
