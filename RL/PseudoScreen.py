@@ -45,7 +45,10 @@ class PseudoScreen(QWidget):
         return self.last_reward if self.last_reward != -1 else -1
 
     def get_total_rewards(self):
-            return self.last_reward
+        return self.last_reward
+
+    def add_rewards(self, reward):
+        self.total_rewards += reward
 
     def reset_reward(self):
         self.last_reward = -1

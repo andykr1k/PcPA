@@ -61,6 +61,7 @@ def rl_thread(screen):
             time.sleep(1)
             next_state = capture_screenshot()
             reward = screen.get_reward()
+            # screen.add_rewards(reward)
             episode_reward += reward
             screen.reset_reward()
             print(f"    Reward received: {reward}, Total Rewards: {screen.get_total_rewards()}")
