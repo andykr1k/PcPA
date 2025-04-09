@@ -68,7 +68,7 @@ def rl_thread(screen):
             state = next_state
         print(f"  Total reward for episode {episode+1}: {episode_reward}")
         all_rewards.append(episode_reward)
-        signal_emitter.update_plot_signal.emit(list(range(1, episode + 2)), all_rewards)
+        signal_emitter.update_plot_signal.emit(list(range(1, episode + 1)), all_rewards)
         print(f"  Training agent...")
         agent.replay()
     plt.ioff()
