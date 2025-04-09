@@ -1,13 +1,13 @@
-import sys
 import random
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
-from PyQt5.QtCore import QRect
+from PyQt5.QtWidgets import QWidget, QPushButton
+from PyQt5.QtCore import QRect, pyqtSignal
 
 class PseudoScreen(QWidget):
+    reward_updated = pyqtSignal(int)
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Button Reward Game")
-        self.setGeometry(100, 100, 600, 400)
 
         self.buttons = {
             "Red": QPushButton("Red Button", self),
@@ -16,8 +16,9 @@ class PseudoScreen(QWidget):
         }
 
         self.rewards = {"Red": 0, "Green": 1, "Blue": 0}
-        self.last_reward = 0  # Store the last reward received
+        self.last_reward = -1
         self.total_rewards = 0
+        self.showFullScreen()
 
         for color, button in self.buttons.items():
             button.setStyleSheet(f"background-color: {color.lower()}; color: white; font-size: 14px;")
@@ -28,18 +29,23 @@ class PseudoScreen(QWidget):
     def button_clicked(self, color):
         self.last_reward = self.rewards[color]
         print(f"You clicked {color}! Reward: {self.last_reward}")
+        self.reward_updated.emit(self.last_reward)
         self.randomize_positions()
 
     def randomize_positions(self):
+        screen_width = self.width()
+        screen_height = self.height()
+
         for button in self.buttons.values():
-            x, y = random.randint(50, 500), random.randint(50, 300)
+            x = random.randint(0, screen_width - 100)
+            y = random.randint(0, screen_height - 40)
             button.setGeometry(QRect(x, y, 100, 40))
 
     def get_reward(self):
-        return self.last_reward
+        return self.last_reward if self.last_reward != -1 else -1
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = PseudoScreen()
-    window.show()
-    sys.exit(app.exec_())
+    def get_total_rewards(self):
+            return self.last_reward
+
+    def reset_reward(self):
+        self.last_reward = -1

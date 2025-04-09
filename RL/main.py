@@ -5,9 +5,26 @@ import cv2
 import time
 import threading
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import pyqtSignal, QObject
 from PseudoScreen import PseudoScreen
 from CVModel import CVModel
+from MatplotlibWidget import MatplotlibWidget
 from tensorflow.keras.preprocessing.image import img_to_array
+import keyboard
+import matplotlib.pyplot as plt
+
+stop_flag = False
+
+class SignalEmitter(QObject):
+    update_plot_signal = pyqtSignal(list, list)
+
+signal_emitter = SignalEmitter()
+
+def listen_for_quit():
+    global stop_flag
+    print("Press 'q' at any time to stop...")
+    keyboard.wait('q')
+    stop_flag = True
 
 def preprocess_image(image):
     image = cv2.resize(image, (224, 224))
@@ -15,7 +32,7 @@ def preprocess_image(image):
     return img_to_array(image)
 
 def capture_screenshot():
-    screenshot = pyautogui.screenshot(region=(100, 100, 600, 400))
+    screenshot = pyautogui.screenshot(region=(0, 0, 1920, 1080))
     screenshot = np.array(screenshot)
     screenshot = cv2.cvtColor(screenshot, cv2.COLOR_RGB2BGR)
     return preprocess_image(screenshot)
@@ -23,62 +40,64 @@ def capture_screenshot():
 def rl_thread(screen):
     agent = CVModel()
     episodes = 100
+    all_rewards = []
 
     for episode in range(episodes):
         print(f"Episode {episode+1}/{episodes}")
-
         state = capture_screenshot()
         done = False
-
-        episode_reward = 0  # Track total reward for the episode
+        episode_reward = 0
         for step in range(20):
+            if stop_flag:
+                print("Stopping RL thread mid-episode...")
+                return
             print(f"  Step {step+1}/20")
-
-            # Select action based on the current state
             action = agent.act(state)
             x, y, click = int(action[0]), int(action[1]), int(action[2])
-
-            # Log action
             print(f"    Action taken: x={x}, y={y}, click={click}")
-
-            # Perform the action if 'click' is 1
             if click:
-                print(f"    Clicking at ({x+100}, {y+100})")  # Adjust for screen offset
-                pyautogui.click(x+100, y+100)
-
-            time.sleep(1)  # Let the UI update
-
-            # Capture the next state (screenshot)
+                print(f"    Clicking at ({x}, {y})")
+                pyautogui.click(x, y)
+            time.sleep(1)
             next_state = capture_screenshot()
-
-            # Get the reward from the screen (based on button clicked)
             reward = screen.get_reward()
-            episode_reward += reward  # Add reward for this step
-
-            # Log reward
-            print(f"    Reward received: {reward}")
-
-            # Store the experience in memory
+            episode_reward += reward
+            screen.reset_reward()
+            print(f"    Reward received: {reward}, Total Rewards: {screen.get_total_rewards()}")
             agent.remember(state, action, reward, next_state, done)
-
-            # Transition to the next state
             state = next_state
-
-        # Log the total reward for this episode
         print(f"  Total reward for episode {episode+1}: {episode_reward}")
-
-        # Train the model using the experience replay
+        all_rewards.append(episode_reward)
+        signal_emitter.update_plot_signal.emit(list(range(1, episode + 2)), all_rewards)
         print(f"  Training agent...")
         agent.replay()
+    plt.ioff()
+    plt.show()
 
 def main():
     app = QApplication(sys.argv)
-    screen = PseudoScreen()
-    screen.show()
+    matplotlib_widget = MatplotlibWidget()
+    matplotlib_widget.setWindowTitle("Reinforcement Learning Reward Plot")
+    matplotlib_widget.resize(800, 600)
+    matplotlib_widget.show()
 
-    time.sleep(5) # give time to the UI to load.
+    def update_plot_slot(x, y):
+        matplotlib_widget.showRewardPlot(x, y)
+
+    screen = PseudoScreen()
+
+    time.sleep(5)
+
+    print("Starting RL thread...")
     rl_thread_instance = threading.Thread(target=rl_thread, args=(screen,))
     rl_thread_instance.start()
+
+    print("Starting Quit Listener thread...")
+    quit_listener = threading.Thread(target=listen_for_quit)
+    quit_listener.start()
+
+    plt.ion()
+    signal_emitter.update_plot_signal.connect(update_plot_slot)
 
     sys.exit(app.exec_())
 
